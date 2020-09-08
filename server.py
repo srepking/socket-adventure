@@ -1,5 +1,7 @@
 import socket
+import logging
 
+logging.basicConfig(level=logging.ERROR)
 
 class Server(object):
     """
@@ -80,8 +82,12 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
-
-        pass
+        return [
+             "You are in the living room.",
+             "You are on the patio.",
+             "You are in the kitchen.",
+             "You are on the front porch."
+         ][room_number]
 
     def greet(self):
         """
@@ -109,8 +115,11 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        received = b''
+        while b'\n' not in received:
+            received += self.client_connection.recv(16)
+        self.input_buffer = received.decode().strip()
 
-        pass
 
     def move(self, argument):
         """
@@ -132,10 +141,47 @@ class Server(object):
         :param argument: str
         :return: None
         """
-
+        logging.debug('The argument passed to move is:"{}"'.format(argument))
+        logging.debug('The room you are starting from is: "{}"'.format(self.room))
         # TODO: YOUR CODE HERE
+        while self.room == 0:
+            if argument == 'north':
+                self.room = 3
+                break
+            if argument == 'east':
+                self.room = 2
+                break
+            if argument == 'west':
+                self.room = 1
+                break
+            else:
+                break
 
-        pass
+        while self.room == 1:
+
+            if argument == 'east':
+                self.room = 0
+                break
+
+            else:
+                break
+
+        while self.room == 2:
+
+            if argument == 'west':
+                self.room = 0
+                break
+            else:
+                break
+
+        while self.room == 3:
+            if argument == 'south':
+                self.room = 0
+                break
+            else:
+                break
+
+        self.output_buffer = self.room_description(self.room)
 
     def say(self, argument):
         """
@@ -153,7 +199,7 @@ class Server(object):
 
         # TODO: YOUR CODE HERE
 
-        pass
+        self.output_buffer = 'You say, "{}"'.format(argument)
 
     def quit(self, argument):
         """
@@ -169,7 +215,8 @@ class Server(object):
 
         # TODO: YOUR CODE HERE
 
-        pass
+        self.done = True
+        self.output_buffer = "Goodbye!"
 
     def route(self):
         """
@@ -184,8 +231,22 @@ class Server(object):
         """
 
         # TODO: YOUR CODE HERE
+        if 'move' in self.input_buffer:
+            txt = self.input_buffer
+            txt = txt.rstrip('\n')
+            txt = txt.strip('move')
+            txt = txt.strip()
 
-        pass
+            self.move(txt)
+        if 'say' in self.input_buffer:
+            txt = self.input_buffer
+            txt = txt.rstrip('\n')
+            txt = txt.strip('say')
+            txt = txt.strip()
+            self.say(txt)
+        if 'quit' in self.input_buffer:
+            self.quit('quitting')
+
 
     def push_output(self):
         """
@@ -199,7 +260,7 @@ class Server(object):
 
         # TODO: YOUR CODE HERE
 
-        pass
+        self.client_connection.sendall(b"OK!" + self.output_buffer.encode() + b"\n")
 
     def serve(self):
         self.connect()
